@@ -62,6 +62,11 @@ public class SassCompiler {
                 .defaultValue("false")
                 .help("Let compilation succeed even though there are warnings");
 
+        argp.defineOption("ignore-non-theme-folders").values("true", "false")
+        		.defaultValue("false")
+        		.help("Skips compilation attempt for folders that do not cantain an .scss file."
+        				+ " This stops the compilation to fail on folders created by versioning systems.");
+
         argp.parse(args);
 
         String input = argp.getInputFile();
@@ -74,9 +79,15 @@ public class SassCompiler {
                 .parseBoolean(argp.getOptionValue("compress"));
         boolean ignoreWarnings = Boolean.parseBoolean(argp
                 .getOptionValue("ignore-warnings"));
+        boolean ignoreNonThemeFolders = Boolean.parseBoolean(argp
+                .getOptionValue("ignore-non-theme-folders"));
 
         File in = new File(input);
         if (!in.canRead()) {
+        	if(ignoreNonThemeFolders) {
+        		System.err.println(in.getParent() + " does not contain a theme file. Ignoring.");
+        		return; //throw no exception here
+        	}
             System.err.println(in.getCanonicalPath() + " could not be read!");
             System.exit(ERROR_FILE_NOT_FOUND);
         }
